@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0d0f1a">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Paco te traduce</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Escenario oscuro de neón con el personaje canónico arriba y su frase debajo; dos micrófonos grandes, uno por cada persona que habla; chistes y frases rápidas al final. */
+:root {
+  --night: #0d0f1a;
+  --panel: #191c2c;
+  --panel-2: #23273b;
+  --text: #f4f2ff;
+  --muted: #b9b7d1;
+  --pink: #ff5fa2;
+  --pink-ink: #2b0016;
+  --mint: #9be7d4;
+  --mint-ink: #04241c;
+  --gold: #f6bd3a;
+  --gold-ink: #2a1c00;
+  --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body {
+  background: var(--night); color: var(--text); font-family: var(--body); font-size: 17px; line-height: 1.4;
+  padding-block: 12px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.badge { display: flex; flex-direction: column; line-height: 1.1; }
+.badge small { font: 800 12px var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+.badge strong { font: 800 26px var(--display); }
+.who { display: flex; background: var(--panel); border-radius: 999px; padding: 4px; gap: 4px; }
+.who button { font: 800 16px var(--body); color: var(--text); background: transparent; border: 0; min-height: 44px; padding: 0 18px; border-radius: 999px; cursor: pointer; }
+.who button[aria-pressed="true"] { background: var(--pink); color: var(--pink-ink); }
+button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--mint); outline-offset: 2px; }
+
+.stage { position: relative; border-radius: 26px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #3a2156 0%, #18203f 55%, #0d0f1a 100%); }
+.stage::before, .stage::after { content: ""; position: absolute; left: 6%; right: 6%; height: 3px; border-radius: 3px; }
+.stage::before { top: 14%; background: var(--pink); box-shadow: 0 0 18px var(--pink); opacity: 0.6; }
+.stage::after { top: 26%; left: 16%; right: 16%; background: var(--mint); box-shadow: 0 0 18px var(--mint); opacity: 0.45; }
+.figure { position: relative; z-index: 1; height: 360px; margin-top: 14px; }
+.view { position: absolute; bottom: 0; left: 50%; height: 100%; transform: translateX(-50%); transform-origin: 50% 85%; opacity: 0; transition: opacity 0.28s ease; will-change: transform, opacity; }
+.view.on { opacity: 1; }
+.view img { display: block; height: 100%; width: auto; max-width: none; filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.55)); }
+.glow { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; mix-blend-mode: screen; pointer-events: none; opacity: 0; }
+.caption { position: relative; z-index: 2; margin: -34px 12px 12px; background: var(--panel); border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.caption .name { font: 800 12px var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--pink); }
+.caption p { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.caption .heard { font-size: 14px; font-weight: 600; color: var(--muted); }
+.again { align-self: flex-start; font: 800 15px var(--body); color: var(--mint); background: transparent; border: 2px solid var(--mint); border-radius: 12px; min-height: 40px; padding: 0 12px; cursor: pointer; }
+
+.mics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mic { display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; border-radius: 22px; padding: 16px 10px; min-height: 112px; cursor: pointer; font: 800 17px/1.15 var(--body); text-align: center; }
+.mic svg { width: 34px; height: 34px; }
+.mic small { font: 600 13px var(--body); opacity: 0.85; }
+.mic.them { background: var(--pink); color: var(--pink-ink); }
+.mic.me { background: var(--gold); color: var(--gold-ink); }
+.mic[aria-pressed="true"] { outline: 4px solid var(--text); outline-offset: 2px; }
+.mic:disabled, .big:disabled { opacity: 0.5; cursor: default; }
+
+.card { background: var(--panel); border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { font: 800 20px/1.1 var(--display); margin: 0; }
+.card label, .note { font-size: 14px; color: var(--muted); font-weight: 600; margin: 0; }
+textarea { font: 800 18px var(--body); color: var(--text); background: var(--panel-2); border: 2px solid #343a57; border-radius: 14px; padding: 10px 12px; min-height: 64px; resize: vertical; width: 100%; box-sizing: border-box; }
+select { font: 800 17px var(--body); color: var(--text); background: var(--panel-2); border: 2px solid #343a57; border-radius: 14px; min-height: 48px; padding: 0 10px; width: 100%; }
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.big { font: 800 16px/1.15 var(--body); min-height: 52px; border: 0; border-radius: 14px; cursor: pointer; padding: 6px 10px; }
+.big.them { background: var(--pink); color: var(--pink-ink); }
+.big.me { background: var(--gold); color: var(--gold-ink); }
+.big.joke { background: var(--mint); color: var(--mint-ink); }
+.show { background: #ffffff; color: #10131c; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.show .tag { font: 800 12px var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: #a00d57; }
+.show p { margin: 0; font: 800 28px/1.2 var(--body); overflow-wrap: anywhere; }
+.show .pron { display: flex; flex-direction: column; gap: 2px; background: #fff1c9; border-radius: 12px; padding: 10px 12px; }
+.show .pron span { font: 800 12px var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: #6b4a00; }
+.show .pron strong { font: 800 22px/1.25 var(--body); color: #10131c; overflow-wrap: anywhere; }
+.show button { align-self: flex-start; font: 800 16px var(--body); min-height: 44px; border: 0; border-radius: 12px; padding: 0 14px; background: #10131c; color: #ffffff; cursor: pointer; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { font: 800 15px var(--body); color: var(--text); background: var(--panel-2); border: 2px solid #343a57; min-height: 44px; padding: 0 13px; border-radius: 999px; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.help { font: 800 15px var(--body); color: var(--gold); background: transparent; border: 2px solid var(--gold); border-radius: 999px; min-height: 44px; padding: 0 14px; cursor: pointer; }
+.ring { position: fixed; z-index: 15; box-sizing: border-box; pointer-events: none; border: 5px solid var(--gold); border-radius: 22px; box-shadow: 0 0 0 9999px rgba(5, 6, 12, 0.8), 0 0 26px 8px rgba(246, 189, 58, 0.75); animation: ringpulse 0.9s ease-in-out infinite alternate; }
+.ring b { position: absolute; left: 10px; top: -44px; background: var(--gold); color: var(--gold-ink); font: 800 20px var(--body); letter-spacing: 0.08em; padding: 4px 16px; border-radius: 999px; white-space: nowrap; }
+.ring b::after { content: ""; position: absolute; left: 24px; bottom: -10px; border: 11px solid transparent; border-bottom: 0; border-top-color: var(--gold); }
+.ring.low b { top: auto; bottom: -44px; }
+.ring.low b::after { bottom: auto; top: -10px; border: 11px solid transparent; border-top: 0; border-bottom-color: var(--gold); }
+@keyframes ringpulse { from { border-color: var(--gold); } to { border-color: #ffffff; } }
+@media (prefers-reduced-motion: reduce) { .ring { animation: none; } }
+body.touring { padding-bottom: 280px; }
+.tour { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: #ffffff; color: #10131c; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; gap: 10px; padding-top: 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.tour small { font: 800 12px var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: #a00d57; }
+.tour p { margin: 0; font: 800 18px/1.3 var(--body); }
+.tour .row button { font: 800 16px var(--body); min-height: 48px; border-radius: 14px; cursor: pointer; }
+.tour #tour-skip { background: transparent; color: #10131c; border: 2px solid #10131c; }
+.tour #tour-next { background: #c2136b; color: #ffffff; border: 0; }
+.credit { text-align: center; font-size: 14px; font-weight: 600; color: var(--muted); padding-top: 6px; }
+.credit a { color: var(--mint); font-weight: 800; }
+.credit a:hover { color: #ffffff; }
+</style>
+
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="badge"><small>Seguridad · solo para ti</small><strong>Hola, Patricia</strong></div>
+    <div class="who" id="who" role="group" aria-label="Quién te traduce">
+      <button type="button" id="pick-paco" aria-pressed="true">Paco</button>
+      <button type="button" id="pick-lola" aria-pressed="false">Lola</button>
+    </div>
+    <button type="button" class="help" id="help">¿Cómo se usa?</button>
+  </header>
+
+  <section class="stage" id="stage">
+    <div class="figure" id="figure">
+      <div class="view on" id="v-front"><img id="img-front" alt="Paco 4000" src="img/paco-front.webp"><i class="glow"></i><i class="glow"></i></div>
+      <div class="view" id="v-side"><img id="img-side" alt="" src="img/paco-side.webp"><i class="glow"></i><i class="glow"></i></div>
+    </div>
+    <div class="caption" aria-live="polite">
+      <div class="name" id="cap-name">Paco 4000</div>
+      <p id="cap"></p>
+      <div class="heard" id="heard" hidden></div>
+      <button type="button" class="again" id="again" hidden>Repítelo</button>
+    </div>
+  </section>
+
+  <div class="show" id="show" hidden>
+    <div class="tag">Muéstrale la pantalla</div>
+    <p id="en-big" lang="en"></p>
+    <div class="pron" id="pron" hidden><span>Se lee así</span><strong id="en-pron"></strong></div>
+    <button type="button" id="say-en">Que lo oiga otra vez</button>
+  </div>
+
+  <section class="mics" id="mics">
+    <button type="button" class="mic them" id="mic-them" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+      Me hablan en inglés<small>Acércale el celular</small>
+    </button>
+    <button type="button" class="mic me" id="mic-me" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+      Yo le respondo<small>Habla en español</small>
+    </button>
+  </section>
+
+  <section class="card" id="typed-card">
+    <h2>O por escrito</h2>
+    <label for="typed">Escribe la frase y dime de quién es.</label>
+    <textarea id="typed" placeholder="Where is the exit to parking 3?" autocomplete="off"></textarea>
+    <div class="row">
+      <button type="button" class="big them" id="type-them">Me lo dijeron en inglés</button>
+      <button type="button" class="big me" id="type-me">Dígaselo en inglés</button>
+    </div>
+    <p class="note" id="ai-note" hidden>Aquí no tengo permiso para traducir frases nuevas. Las frases rápidas y los chistes sí funcionan.</p>
+  </section>
+
+  <section class="card" id="joke-card">
+    <h2>Un ratico de risa</h2>
+    <div class="row">
+      <button type="button" class="big joke" id="joke-es">Cuéntame un chiste</button>
+      <button type="button" class="big joke" id="joke-en">Tell me a joke</button>
+    </div>
+  </section>
+
+  <section class="card" id="chips-card">
+    <h2>Frases rápidas</h2>
+    <p class="note">Tocas una y se la digo en inglés.</p>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section class="card" id="voice-card" hidden>
+    <h2>La voz</h2>
+    <label for="voice">Estas son las voces en español de este aparato. Prueba cuál suena mejor.</label>
+    <select id="voice"></select>
+    <button type="button" class="big joke" id="voice-try">Probar esta voz</button>
+  </section>
+  <footer class="credit">Creado por <a href="https://frome-one.com" target="_blank" rel="noopener">Esmeralda García</a></footer>
+</main>
+
+<div class="ring" id="ring" hidden><b>AQUÍ</b></div>
+
+<div class="tour" id="tour" hidden>
+  <small id="tour-n">Guía</small>
+  <p id="tour-text"></p>
+  <div class="row">
+    <button type="button" id="tour-skip">Salir</button>
+    <button type="button" id="tour-next">Siguiente</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var OWNER = "Patricia";
+
+  var PEOPLE = {
+    paco: {
+      name: "Paco 4000", pitch: 1, glow: "255,178,31",
+      front: { src: "img/paco-front.webp", eyes: [[45.28, 11.19, 9, 7.2], [55.04, 11.23, 9, 7.2]] },
+      side: { src: "img/paco-side.webp", eyes: [[53.98, 11.01, 11, 7.2], [43.95, 11.48, 8.5, 7.2]] },
+      hello: "¡Quiubo, " + OWNER + "! Aquí Paco, tu traductor de confianza. ¿Quién necesita ayuda hoy?",
+      wait: "Un momentico, que ya te cuento.",
+      ear: "Soy todo oídos. Bueno, todo sensores.",
+      shown: "Listo, ya se lo dije. De nada, para eso soy bilingüe.",
+      style: "Tienes un toque simpático y un poco creído, pero nunca a costa de la claridad: como mucho una coletilla corta al final."
+    },
+    lola: {
+      name: "Lola Chung", pitch: 1.05, glow: "200,240,255",
+      front: { src: "img/lola-front.webp", eyes: [[56.87, 14.38, 15, 7], [45.36, 14.5, 15, 7]] },
+      side: { src: "img/lola-side.webp", eyes: [[56.99, 14.87, 18, 8], [69.17, 14.71, 16, 7]] },
+      hello: "Hola, " + OWNER + ". Aquí Lola. Tú tranquila, que el inglés lo pongo yo.",
+      wait: "Un momentico.",
+      ear: "Te escucho.",
+      shown: "Dicho. Siguiente.",
+      style: "Eres seca, elegante y vas al grano, sin adornos."
+    }
+  };
+  var QUICK = [
+    ["Con mucho gusto", "You're welcome, happy to help.", "yur UEL-com, JA-pi tu jelp"],
+    ["Siga derecho", "Go straight ahead.", "gou streit a-JED"],
+    ["A la derecha", "It's on your right.", "its on yur rait"],
+    ["A la izquierda", "It's on your left.", "its on yur left"],
+    ["Suba al segundo piso", "Go up to the second floor.", "gou ap tu de SE-cond flor"],
+    ["Los baños quedan por allá", "The restrooms are over there.", "de REST-rums ar OU-ver der"],
+    ["La salida es por aquí", "The exit is this way.", "di EK-sit is dis uei"],
+    ["El parqueadero queda abajo", "The parking lot is downstairs.", "de PAR-king lot is daun-STERS"],
+    ["Un momentico, por favor", "One moment, please.", "uan MOU-ment, plis"],
+    ["¿Me lo repite más despacio?", "Could you say that again, more slowly?", "cud yu sei dat a-GUEN, mor SLOU-li"],
+    ["Hable aquí, por favor", "Please speak into the phone.", "plis spik IN-tu de foun"],
+    ["No está permitido", "I'm sorry, that's not allowed.", "aim SO-ri, dats not a-LAUD"],
+    ["Qué pena, no sé", "I'm sorry, I don't know.", "aim SO-ri, ai dount nou"]
+  ];
+  var JOKES = {
+    es: [
+      OWNER + ", ¿sabes por qué a los robots no nos da miedo el turno de noche? Porque venimos con la batería cargada y con vigilante incluida.",
+      "Un visitante me preguntó si yo hablaba inglés. Le dije: of course. Y ahí se me acabó el inglés. Menos mal que es chiste.",
+      "Me pidieron que fuera más humano. Llegué tarde, pedí un tinto y dije que fue el trancón.",
+      "¿Qué le dice un robot a un parqueadero lleno? Tranquilo, que yo tampoco encuentro puesto.",
+      OWNER + ", yo traduzco inglés, francés y excusas. Las excusas son las más fáciles: todas dicen ya casi llego."
+    ],
+    en: [
+      "Why did the robot apply for the security job? It already had great hardware and zero need for coffee breaks.",
+      "I told my boss I can work twenty-four hours a day. He said: perfect. I said: I was bragging, not volunteering.",
+      "A visitor asked me to keep an eye on his car. I said: sir, I have two, and they both glow in the dark.",
+      "What is a robot's favorite music? Heavy metal. Obviously."
+    ]
+  };
+
+  /* ---------- Escenario ---------- */
+  var state = "idle";
+  var who = "paco";
+  var views = { front: $("v-front"), side: $("v-side") };
+  function dress() {
+    var p = PEOPLE[who];
+    ["front", "side"].forEach(function (k) {
+      var v = views[k], img = v.querySelector("img"), glows = v.querySelectorAll(".glow");
+      img.src = p[k].src;
+      p[k].eyes.forEach(function (e, i) {
+        var g = glows[i];
+        g.style.left = e[0] + "%"; g.style.top = e[1] + "%"; g.style.width = e[2] * 1.9 + "%"; g.style.height = e[3] * 1.9 + "%";
+        g.style.background = "radial-gradient(closest-side, rgba(" + p.glow + ",0.95), rgba(" + p.glow + ",0.35) 55%, rgba(" + p.glow + ",0) 100%)";
+      });
+    });
+    $("img-front").alt = p.name;
+  }
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var t0 = performance.now();
+  function frame(now) {
+    var t = (now - t0) / 1000, side = state === "listen";
+    views.front.classList.toggle("on", !side); views.side.classList.toggle("on", side);
+    var y = Math.sin(t * 1.5) * 3, r = Math.sin(t * 0.8) * 0.7, s = 1, glow = 0.12 + 0.1 * Math.sin(t * 1.3);
+    if (state === "speak") { y = Math.sin(t * 9) * 2.5 + Math.sin(t * 2.3) * 3; r = Math.sin(t * 3.1) * 1.6; glow = 0.25 + 0.75 * Math.abs(Math.sin(t * 11) * Math.sin(t * 3.7)); }
+    else if (state === "listen") { r = -1.5 + Math.sin(t * 1.2) * 0.6; s = 1.03; glow = 0.75; }
+    else if (state === "think") { glow = 0.5 + 0.5 * Math.sin(t * 7); r = Math.sin(t * 2) * 1.2; }
+    else if (state === "happy") { y = -Math.abs(Math.sin(t * 9)) * 12; glow = 1; }
+    if (calm) { y = 0; r = 0; s = 1; }
+    var tf = "translateX(-50%) translateY(" + y.toFixed(2) + "px) rotate(" + r.toFixed(2) + "deg) scale(" + s + ")";
+    views.front.style.transform = tf; views.side.style.transform = tf;
+    var gl = document.querySelectorAll(".glow");
+    for (var i = 0; i < gl.length; i++) gl[i].style.opacity = glow.toFixed(2);
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- Voz ---------- */
+  var canSpeak = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  var speakTimer = 0, lastLine = null, chosen = "";
+  try { chosen = localStorage.getItem("paco-traduce-voz") || ""; } catch (e) { chosen = ""; }
+  function allVoices(two) {
+    var voices = []; try { voices = window.speechSynthesis.getVoices() || []; } catch (e) { voices = []; }
+    return voices.filter(function (v) { return (v.lang || "").slice(0, 2) === two; });
+  }
+  function score(v, prefs) {
+    var l = (v.lang || "").replace("_", "-"), n = v.name || "", s = 0, i = prefs.indexOf(l);
+    s += i >= 0 ? (prefs.length - i) * 2 : 0;
+    if (/natural|neural|online|premium|enhanced|mejorad/i.test(n)) s += 20;
+    if (/google|siri/i.test(n)) s += 8;
+    if (/compact|espeak/i.test(n)) s -= 10;
+    return s;
+  }
+  function pickVoice(prefs) {
+    var list = allVoices(prefs[0].slice(0, 2));
+    if (prefs[0].slice(0, 2) === "es" && chosen) for (var k = 0; k < list.length; k++) if (list[k].name === chosen) return list[k];
+    list.sort(function (a, b) { return score(b, prefs) - score(a, prefs); });
+    return list[0] || null;
+  }
+  function speak(text, lang) {
+    lastLine = { text: text, lang: lang };
+    clearTimeout(speakTimer);
+    state = "speak";
+    var done = function () { clearTimeout(speakTimer); if (state === "speak") state = "idle"; };
+    speakTimer = setTimeout(done, Math.min(20000, 1200 + text.length * 75));
+    if (!canSpeak) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var v = lang === "en" ? pickVoice(["en-US", "en-GB", "en"]) : pickVoice(["es-CO", "es-US", "es-MX", "es-419", "es"]);
+      if (v) u.voice = v;
+      u.lang = v ? v.lang : (lang === "en" ? "en-US" : "es-US");
+      u.pitch = PEOPLE[who].pitch; u.rate = lang === "en" ? 0.92 : 1;
+      u.onend = done; u.onerror = done;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* sin voz: queda el texto y la animación */ }
+  }
+
+  /* ---------- Pantalla ---------- */
+  function caption(text, heard) {
+    $("cap").textContent = text;
+    $("heard").hidden = !heard; $("heard").textContent = heard ? "Oí: " + heard : "";
+  }
+  function say(text, lang, heard) { caption(text, heard); speak(text, lang || "es"); $("again").hidden = false; }
+  function showEnglish(text, pron) {
+    $("en-big").textContent = text; $("en-pron").textContent = pron || ""; $("pron").hidden = !pron;
+    $("show").hidden = false; $("show").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  function setWho(next, silent) {
+    who = next; dress();
+    $("cap-name").textContent = PEOPLE[who].name;
+    $("pick-paco").setAttribute("aria-pressed", String(who === "paco"));
+    $("pick-lola").setAttribute("aria-pressed", String(who === "lola"));
+    try { localStorage.setItem("paco-traduce-who", who); } catch (e) { /* sin memoria local */ }
+    if (silent) caption(PEOPLE[who].hello); else say(PEOPLE[who].hello, "es");
+  }
+
+  /* ---------- Traducción ---------- */
+  var sample = null, sampleTried = false;
+  async function getSample() {
+    if (sampleTried) return sample;
+    sampleTried = true;
+    try { sample = window.claude && window.claude.use ? await window.claude.use("sample") : null; } catch (e) { sample = null; }
+    return sample;
+  }
+  function clean(s) { return String(s || "").trim().replace(/^["«“]+|["»”]+$/g, ""); }
+  function colombia(s) {
+    return s.replace(/\b(aparcamientos|estacionamientos)\b/gi, "parqueaderos").replace(/\b(aparcamiento|estacionamiento|parking)\b/gi, "parqueadero")
+      .replace(/\baseos\b/gi, "baños").replace(/\baseo\b/gi, "baño").replace(/\bmóvil\b/gi, "celular").replace(/\bordenador\b/gi, "computador");
+  }
+  async function machine(text, pair) {
+    var r = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text.slice(0, 450)) + "&langpair=" + pair);
+    var j = await r.json();
+    var out = j && j.responseData && j.responseData.translatedText;
+    if (!out) throw { code: "upstream_error" };
+    return clean(out);
+  }
+  async function toSpanish(heard) {
+    var p = PEOPLE[who], s = await getSample();
+    if (s) {
+      var r = await s(
+        "Eres " + p.name + ", intérprete de " + OWNER + ", una vigilante de seguridad colombiana, en su puesto de trabajo. " +
+        "Un visitante le acaba de decir esto en inglés:\n\"" + heard.slice(0, 1200) + "\"\n\n" +
+        "Cuéntale a ella en español de Colombia, claro y cálido, qué le está diciendo o preguntando. " +
+        "Empieza por \"" + OWNER + ", te está preguntando\" o \"" + OWNER + ", te está diciendo\", según corresponda. " +
+        "Usa palabras de Colombia: parqueadero, baño, celular, tiquete, ascensor. Máximo dos frases cortas, pensadas para oírse en voz alta. " +
+        "Si no se entiende o no es inglés, dilo y sugiérele pedir que lo repita. " + p.style +
+        " Responde solo con lo que le dirías, sin comillas ni explicaciones.", { modelTier: "quick" });
+      return clean(r.text);
+    }
+    return OWNER + ", te dice: " + colombia(await machine(heard, "en|es"));
+  }
+  async function toEnglish(mine) {
+    var s = await getSample();
+    if (s) {
+      var j = await s.json(
+        "Una vigilante de seguridad colombiana quiere decirle esto a un visitante que solo habla inglés:\n\"" + mine.slice(0, 1200) + "\"\n\n" +
+        "Tradúcelo a un inglés sencillo, amable y corto, de los que se entienden a la primera. " +
+        "Añade su pronunciación figurada para una hispanohablante: cómo suena la frase escrita con letras y sonidos del español, con la sílaba fuerte de cada palabra larga en mayúsculas. " +
+        "Ejemplo: \"Go up to the second floor.\" se lee \"gou ap tu de SE-cond flor\". " +
+        "Responde solo con un JSON así: {\"en\": \"frase en inglés\", \"pron\": \"pronunciación figurada\"}", { modelTier: "quick" });
+      return { en: clean(j && j.en), pron: clean(j && j.pron) };
+    }
+    return { en: await machine(mine, "es|en"), pron: "" };
+  }
+  function problem(e) {
+    var code = e && e.code;
+    if (code === "rate_limited") return "Voy muy cargado ahorita. Intenta otra vez en un momentico.";
+    if (code === "not_granted" || code === "sampling_disabled" || code === "not_declared" || code === "capability_disabled" || code === "capability_removed") {
+      $("ai-note").hidden = false; sample = null;
+      return "Aquí no me dejan traducir frases nuevas. Las frases rápidas sí te las digo.";
+    }
+    return "No pude traducir eso. Intenta otra vez.";
+  }
+  var busy = false;
+  function lock(on) { busy = on; ["mic-them", "mic-me", "type-them", "type-me"].forEach(function (id) { $(id).disabled = on; }); }
+  async function fromThem(heard) {
+    if (!heard || busy) return;
+    lock(true); state = "think"; caption(PEOPLE[who].wait, heard);
+    try { say(await toSpanish(heard), "es", heard); }
+    catch (e) { state = "idle"; say(problem(e), "es"); }
+    finally { lock(false); }
+  }
+  async function fromMe(mine) {
+    if (!mine || busy) return;
+    lock(true); state = "think"; caption(PEOPLE[who].wait, mine);
+    try {
+      var out = await toEnglish(mine);
+      if (!out.en) throw { code: "upstream_error" };
+      showEnglish(out.en, out.pron); caption(PEOPLE[who].shown); speak(out.en, "en"); $("again").hidden = false;
+    }
+    catch (e) { state = "idle"; say(problem(e), "es"); }
+    finally { lock(false); }
+  }
+
+  /* ---------- Micrófono ---------- */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var rec = null;
+  function noMic() { $("mics").hidden = true; }
+  function listen(btn, lang, then) {
+    if (busy) return;
+    if (rec) { try { rec.abort(); } catch (e) { /* ya parado */ } rec = null; }
+    var got = false, r;
+    try { r = new SR(); } catch (e) { noMic(); return; }
+    rec = r; r.lang = lang; r.interimResults = false; r.maxAlternatives = 1;
+    r.onresult = function (ev) { got = true; then(ev.results[0][0].transcript); };
+    r.onerror = function (ev) {
+      got = true; state = "idle";
+      if (ev.error === "not-allowed" || ev.error === "service-not-allowed") { noMic(); say("Aquí no me dejan usar el micrófono. Escríbemelo abajo y sigo igual de rápido.", "es"); }
+      else say("No alcancé a oír nada. Inténtalo otra vez.", "es");
+    };
+    r.onend = function () { btn.setAttribute("aria-pressed", "false"); if (!got && state === "listen") state = "idle"; rec = null; };
+    try {
+      if (canSpeak) window.speechSynthesis.cancel();
+      r.start(); state = "listen"; btn.setAttribute("aria-pressed", "true"); caption(PEOPLE[who].ear);
+    } catch (e) { noMic(); }
+  }
+
+  /* ---------- Botones ---------- */
+  $("mic-them").onclick = function () { listen($("mic-them"), "en-US", fromThem); };
+  $("mic-me").onclick = function () { listen($("mic-me"), "es-CO", fromMe); };
+  $("type-them").onclick = function () { var v = $("typed").value.trim(); if (v) fromThem(v); else say("Primero escríbeme lo que te dijeron.", "es"); };
+  $("type-me").onclick = function () { var v = $("typed").value.trim(); if (v) fromMe(v); else say("Primero escríbeme lo que le quieres decir.", "es"); };
+  $("again").onclick = function () { if (lastLine) speak(lastLine.text, lastLine.lang); };
+  $("say-en").onclick = function () { speak($("en-big").textContent, "en"); };
+  $("pick-paco").onclick = function () { setWho("paco"); };
+  $("pick-lola").onclick = function () { setWho("lola"); };
+  var turn = { es: 0, en: 0 };
+  function joke(lang) {
+    var list = JOKES[lang], line = list[turn[lang] % list.length]; turn[lang]++;
+    say(line, lang);
+    setTimeout(function () { if (state === "idle") { state = "happy"; setTimeout(function () { if (state === "happy") state = "idle"; }, 1600); } }, Math.min(20000, 1300 + line.length * 75));
+  }
+  $("joke-es").onclick = function () { joke("es"); };
+  $("joke-en").onclick = function () { joke("en"); };
+  var chips = $("chips");
+  QUICK.forEach(function (pair) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = pair[0]; b.setAttribute("aria-pressed", "false");
+    b.onclick = function () {
+      Array.prototype.forEach.call(chips.children, function (c) { c.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      showEnglish(pair[1], pair[2]); caption(PEOPLE[who].shown); speak(pair[1], "en"); $("again").hidden = false;
+    };
+    chips.appendChild(b);
+  });
+
+  function keepVoice() { chosen = $("voice").value; try { localStorage.setItem("paco-traduce-voz", chosen); } catch (e) { /* sin memoria local */ } }
+  function fillVoices() {
+    if (!canSpeak) return;
+    var list = allVoices("es"), sel = $("voice"), prefs = ["es-CO", "es-US", "es-MX", "es-419", "es"];
+    if (!list.length) return;
+    list.sort(function (a, b) { return score(b, prefs) - score(a, prefs); });
+    sel.textContent = "";
+    list.forEach(function (v) {
+      var o = document.createElement("option"); o.value = v.name; o.textContent = v.name + " (" + v.lang + ")";
+      if (v.name === chosen) o.selected = true; sel.appendChild(o);
+    });
+    $("voice-card").hidden = list.length < 2;
+  }
+  $("voice").onchange = keepVoice;
+  $("voice-try").onclick = function () { keepVoice(); say("Así sueno con esta voz, " + OWNER + ". Tú dirás si me quedo con ella.", "es"); };
+  fillVoices();
+  if (canSpeak) { try { window.speechSynthesis.onvoiceschanged = fillVoices; } catch (e) { /* sin lista de voces */ } }
+
+  /* ---------- Guía paso a paso ---------- */
+  var TOUR = [
+    ["stage", OWNER + ", te muestro todo en un minuto. Fíjate en el marco dorado que dice aquí: te va señalando de qué te hablo. Ahora me señala a mí, Paco, y debajo te dejo escrito lo que digo."],
+    ["who", "¿Ves el marco dorado? Ahí están mi nombre y el de Lola. Tocas Lola y te atiende ella. Por si un día te cansas de mí, cosa rara."],
+    ["mic-them", "Cuando alguien te hable en inglés, tocas el rosado y le acercas el celular. Yo te cuento qué dijo."],
+    ["mic-me", "Para responderle, tocas el amarillo y hablas en español. Yo se lo digo en inglés."],
+    ["typed-card", "Si hay mucha bulla, también me lo puedes escribir aquí y me dices de quién es la frase."],
+    ["joke-card", "Y si el turno está largo, aquí te cuento un chiste, en español o en inglés."],
+    ["chips-card", "Estas frases ya las tengo listas. Tocas una, se la digo en inglés y debajo te sale cómo se lee."]
+  ];
+  var tourAt = -1;
+  function shown(el) { return el && !el.hidden && el.offsetParent !== null; }
+  var tourEl = null, ringOn = false;
+  function unspot() { tourEl = null; $("ring").hidden = true; document.body.classList.remove("touring"); }
+  function placeRing() {
+    if (!tourEl) { ringOn = false; return; }
+    var r = tourEl.getBoundingClientRect(), ring = $("ring"), pad = 7;
+    ring.style.left = (r.left - pad) + "px"; ring.style.top = (r.top - pad) + "px";
+    ring.style.width = (r.width + pad * 2) + "px"; ring.style.height = (r.height + pad * 2) + "px";
+    ring.classList.toggle("low", r.top < 60);
+    ring.hidden = false;
+    requestAnimationFrame(placeRing);
+  }
+  function startRing() { if (!ringOn) { ringOn = true; requestAnimationFrame(placeRing); } }
+  function tourEnd(done) {
+    unspot(); $("tour").hidden = true; tourAt = -1;
+    try { localStorage.setItem("paco-traduce-guia", "1"); } catch (e) { /* sin memoria local */ }
+    window.scrollTo({ top: 0, behavior: calm ? "auto" : "smooth" });
+    if (done) say("Listo, " + OWNER + ". Si se te olvida algo, arriba está el botón de cómo se usa.", "es");
+  }
+  function tourShow(i, quiet) {
+    unspot();
+    while (i < TOUR.length && !shown($(TOUR[i][0]))) i++;
+    if (i >= TOUR.length) { tourEnd(true); return; }
+    tourAt = i;
+    var el = $(TOUR[i][0]); document.body.classList.add("touring"); tourEl = el;
+    var goTo = el.getBoundingClientRect().top + window.scrollY - 70;
+    window.scrollTo({ top: Math.max(0, goTo), behavior: calm ? "auto" : "smooth" });
+    startRing();
+    $("tour-n").textContent = "Guía · paso " + (i + 1) + " de " + TOUR.length;
+    $("tour-text").textContent = TOUR[i][1]; $("tour").hidden = false;
+    if (quiet) caption(TOUR[i][1]); else say(TOUR[i][1], "es");
+  }
+  $("help").onclick = function () { tourShow(0); };
+  $("tour-next").onclick = function () { tourShow(tourAt + 1); };
+  $("tour-skip").onclick = function () {
+    if (canSpeak) { try { window.speechSynthesis.cancel(); } catch (e) { /* sin voz */ } }
+    state = "idle"; tourEnd(false);
+  };
+
+  if (!SR) noMic();
+  var saved = null;
+  try { saved = localStorage.getItem("paco-traduce-who"); } catch (e) { /* sin memoria local */ }
+  setWho(saved === "lola" ? "lola" : "paco", true);
+  var visits = 0;
+  try { visits = parseInt(localStorage.getItem("paco-traduce-visitas") || "0", 10) || 0; } catch (e) { visits = 0; }
+  if (visits < 5) {
+    try { localStorage.setItem("paco-traduce-visitas", String(visits + 1)); } catch (e) { /* sin memoria local */ }
+    tourShow(0, true);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
